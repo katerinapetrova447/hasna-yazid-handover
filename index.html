@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sat_pipeline / sat_pipeline Â· GitLab</title>
+    <style>
+        :root {
+            --gl-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --gl-font-mono: "GitLab Mono", "JetBrains Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            --gl-bg-page: #fbfaff;
+            --gl-bg-surface: #ffffff;
+            --gl-border-color: #e5e5e8;
+            --gl-text-color: #28272d;
+            --gl-text-muted: #666668;
+            --gl-link-color: #1068bf;
+            --gl-code-bg: #f2f2f5;
+            --gl-purple: #6b4fbb;
+            --gl-header-bg: #292961;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--gl-font-sans);
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #2e2e2e;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation Bar */
+        .navbar {
+            background-color: var(--gl-header-bg);
+            color: #ffffff;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            justify-content: space-between;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            font-weight: bold;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 12px;
+            font-size: 13px;
+            color: #c2c2d6;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-bar {
+            background-color: #3b3b7a;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: white;
+            font-size: 12px;
+            width: 200px;
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #e24329;
+        }
+
+        /* Layout Container */
+        .app-container {
+            display: flex;
+            flex: 1;
+        }
+
+        /* Left Sidebar */
+        .sidebar {
+            width: 48px;
+            background-color: #f0f0f0;
+            border-right: 1px solid #e5e5e5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 8px;
+            gap: 16px;
+            color: #666;
+        }
+
+        .sidebar-item {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .sidebar-item:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            padding: 16px 24px;
+            display: flex;
+            gap: 24px;
+            background-color: #ffffff;
+        }
+
+        .repo-container {
+            flex: 1;
+            max-width: calc(100% - 280px);
+        }
+
+        /* Breadcrumbs & Title */
+        .breadcrumb {
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: #2e2e2e;
+        }
+
+        .breadcrumb a {
+            color: #2e2e2e;
+            text-decoration: none;
+        }
+
+        /* Controls / Action Bar */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            background-color: #fff;
+            border: 1px solid #dc3545;
+            color: #dc3545;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-blue {
+            background-color: #1068bf;
+            color: white;
+            border: none;
+        }
+
+        /* Commit Info Box */
+        .commit-header {
+            background-color: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px 4px 0 0;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .commit-title {
+            font-weight: 600;
+        }
+
+        .commit-meta {
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* File List Table */
+        .file-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #e5e5e5;
+            border-top: none;
+            margin-bottom: 24px;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .file-table tr {
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .file-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .file-table td {
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .file-name {
+            width: 30%;
+            color: #1068bf;
+            font-weight: 500;
+        }
+
+        .file-name.folder {
+            font-weight: bold;
+        }
+
+        .commit-msg {
+            width: 50%;
+            color: #555;
+        }
+
+        .commit-time {
+            width: 20%;
+            text-align: right;
+            color: #707070;
+        }
+
+        /* README Card */
+        .readme-card {
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+        }
+
+        .readme-header {
+            background-color: #fafafa;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e5e5;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .readme-body {
+            padding: 24px 32px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--gl-text-color);
+        }
+
+        /* Comprehensive Markdown Styles inside README */
+        .readme-body h1 {
+            font-size: 24px;
+            border-bottom: 1px solid var(--gl-border-color);
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        .readme-body h2 {
+            font-size: 18px;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--gl-border-color);
+            padding-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .readme-body h3 {
+            font-size: 15px;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .readme-body p {
+            margin-bottom: 16px;
+        }
+
+        .readme-body ul {
+            margin-bottom: 16px;
+            padding-left: 24px;
+        }
+
+        .readme-body li {
+            margin-bottom: 4px;
+        }
+
+        .readme-body code {
+            background-color: var(--gl-code-bg);
+            font-family: var(--gl-font-mono);
+            font-size: 13px;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .readme-body pre {
+            background-color: #f7f7f9;
+            border: 1px solid var(--gl-border-color);
+            border-radius: 4px;
+            padding: 16px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+
+        .readme-body pre code {
+            background: none;
+            padding: 0;
+            font-size: 13px;
+        }
+
+        .readme-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+
+        .readme-body th, .readme-body td {
+            border: 1px solid var(--gl-border-color);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .readme-body th {
+            background-color: #fafafa;
+            font-weight: 600;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--gl-code-bg);
+            color: var(--gl-text-muted);
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        /* Right Sidebar Info Panel */
+        .project-sidebar {
+            width: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sidebar-section h3 {
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: #2e2e2e;
+        }
+
+        .sidebar-section p {
+            color: #666;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .sidebar-list {
+            list-style: none;
+        }
+
+        .sidebar-list li {
+            padding: 4px 0;
+            color: #1068bf;
+            cursor: pointer;
+        }
+
+        /* Donut Chart Mockup */
+        .chart-container {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .donut-chart {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(
+                #1068bf 0% 17.2%,
+                #1f78b4 17.2% 22.9%,
+                #e31a1c 22.9% 61.2%,
+                #33a02c 61.2% 62.4%,
+                #ff7f00 62.4% 100%
+            );
+            position: relative;
+            margin-top: 12px;
+        }
+
+        .donut-chart::before {
+            content: "";
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .lang-legend {
+            font-size: 11px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .lang-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="navbar-left">
+            <div class="logo">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#e24329"><path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 5.1 2a.43.43 0 0 1 .41.29l2.25 6.92h8.48l2.25-6.92a.43.43 0 0 1 .41-.29.42.42 0 0 1 .39.18l2.44 7.51 1.22 3.78a.84.84 0 0 1-.3.94z"/></svg>
+                GitLab
+            </div>
+            <nav class="nav-links">
+                <span>Projects</span>
+                <span>Groups</span>
+                <span>Snippets</span>
+            </nav>
+        </div>
+        <div class="navbar-right">
+            <input type="text" class="search-bar" placeholder="Search to search">
+            <div class="user-avatar"></div>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- Left Sub-Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-item">ðŸ </div>
+            <div class="sidebar-item">ðŸ“‹</div>
+            <div class="sidebar-item">ðŸ”€</div>
+            <div class="sidebar-item">ðŸš€</div>
+            <div class="sidebar-item">âš™ï¸</div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <div class="repo-container">
+                <!-- Breadcrumbs -->
+                <div class="breadcrumb">
+                    <strong>sat_pipeline</strong> / <strong>sat_pipeline</strong>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="action-bar">
+                    <div class="btn-group">
+                        <button class="btn">mainter â–¾</button>
+                        <button class="btn">sat_pipeline / â–¾</button>
+                        <button class="btn">+ â–¾</button>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn" style="color: #333; border-color: #ccc;">Go file</button>
+                        <button class="btn" style="color: #333; border-color: #ccc;">New file</button>
+                        <button class="btn btn-blue">New file â–¾</button>
+                    </div>
+                </div>
+
+                <!-- Commit Card Header -->
+                <div class="commit-header">
+                    <div class="commit-title">sat_pinoS commit commit html</div>
+                    <div class="commit-meta">e848926 Â· 2 months ago</div>
+                </div>
+
+                <!-- Repository Files Table -->
+                <table class="file-table">
+                    <tbody>
+                        <tr>
+                            <td class="file-name folder">ðŸ“ scripts</td>
+                            <td class="commit-msg">Poii-strem folder</td>
+                            <td class="commit-time"></td>
+                        </tr>
+                        <tr>
+                            <td class="file-name folder">ðŸ“ dev</td>
+                            <td class="commit-msg">Add doom folder</td>
+                            <td class="commit-time"></td>
+                        </tr>
+                        <tr>
+                            <td class="file-name folder">ðŸ“ Datasets</td>
+                            <td class="commit-msg">Puu-strem folder</td>
+                            <td class="commit-time"></td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ satellite_pipeline_handler html</td>
+                            <td class="commit-msg">satellite_pipeline_handler.html (paline_haner.dover</td>
+                            <td class="commit-time">commit 2 months ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ LICENSE</td>
+                            <td class="commit-msg">Update commit s</td>
+                            <td class="commit-time"></td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ Makef_gpt2.cu</td>
+                            <td class="commit-msg">Update CUDA or profile, gpl23.py</td>
+                            <td class="commit-time">commit 2 months ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ profile_gpt22.cu</td>
+                            <td class="commit-msg">Text or requirementa.tst</td>
+                            <td class="commit-time">commit 2 months ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ test_gpt2.e</td>
+                            <td class="commit-msg">Update commit s</td>
+                            <td class="commit-time">commit 2 months ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ test_gpt2.cu</td>
+                            <td class="commit-msg">Update commit s</td>
+                            <td class="commit-time">commit 2 months ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ train_gpt2.py</td>
+                            <td class="commit-msg">Update commit s</td>
+                            <td class="commit-time">commit 2 months ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ train_gpt2_fp32.py</td>
+                            <td class="commit-msg">Update commit s</td>
+                            <td class="commit-time">commit 2 months ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ train_llama2.py</td>
+                            <td class="commit-msg">Update commit s</td>
+                            <td class="commit-time">commit 2 months ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ sat.c</td>
+                            <td class="commit-msg">Update commit s</td>
+                            <td class="commit-time">commit 2 months ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ Cortex_Combined_Architecture_Report.pdf</td>
+                            <td class="commit-msg">Cortex_Combined_Architecture_Report.pdf</td>
+                            <td class="commit-time">commit 2 months ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ data_auto.int</td>
+                            <td class="commit-msg">Text mint commit</td>
+                            <td class="commit-time">commit 2 months ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ gittiggore</td>
+                            <td class="commit-msg">Git giilgoore</td>
+                            <td class="commit-time">3 days ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name">ðŸ“„ README.md</td>
+                            <td class="commit-msg">Markdown README md to ensing horder or initial doxie soncie...</td>
+                            <td class="commit-time">4 months ago</td>
+                        </tr>
+                        <tr>
+                            <td class="file-name folder">ðŸ“ models</td>
+                            <td class="commit-msg">folder</td>
+                            <td class="commit-time">5 months ago</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- README Section -->
+                <div class="readme-card">
+                    <div class="readme-header">
+                        <div>ðŸ“„ README.md</div>
+                        <span class="badge">1.8 KB</span>
+                    </div>
+                    <div class="readme-body">
+                        <h1>Machine Learning Models Library (<code>models.ml</code>)</h1>
+                        <p>A pure Java supervised machine learning and dataset preprocessing library built from scratch with zero external ML dependencies. Implements classic classification, regression, text vectorization, and data loading primitives supporting dense arrays, sparse matrices, and direct persistence.</p>
+
+                        <h2>Project Structure</h2>
+                        <pre><code>models/
+â”œâ”€â”€ src/main/java/models/ml/
+â”‚   â”œâ”€â”€ App.java                                    # Worked end-to-end example
+â”‚   â”œâ”€â”€ Model.java                                  # Shared abstract base class &amp; persistence
+â”‚   â”œâ”€â”€ Metrics.java                                # Classification &amp; regression metrics
+â”‚   â”œâ”€â”€ DatasetHandler/
+â”‚   â”‚   â”œâ”€â”€ DatasetLoader.java                     # CSV, JSON, and SQLite ingestion
+â”‚   â”‚   â”œâ”€â”€ DocToVec.java                          # Document vectorization pooling
+â”‚   â”‚   â””â”€â”€ helpers/
+â”‚   â”‚       â”œâ”€â”€ Dataset.java                       # Dataset wrapper container
+â”‚   â”‚       â”œâ”€â”€ DatasetConfig.java                 # Ingestion configuration enum
+â”‚   â”‚       â””â”€â”€ DatasetSplit.java                  # Partition container &amp; split logic
+â”‚   â”œâ”€â”€ Preprocessing/
+â”‚   â”‚   â”œâ”€â”€ Scaling/
+â”‚   â”‚   â”‚   â””â”€â”€ StandardScaler.java                # Z-score normalization
+â”‚   â”‚   â””â”€â”€ Text/                                  # BagOfWords, TFIDF, NgramGenerator, WordToVec
+â”‚   â”œâ”€â”€ KNN/                                       # KNN &amp; AbstractKNN
+â”‚   â”œâ”€â”€ LinearRegression/                          # LinearRegression &amp; AbstractLinearRegression
+â”‚   â”œâ”€â”€ LogisticRegression/                        # LogisticRegression &amp; AbstractLogisticRegression
+â”‚   â”œâ”€â”€ NaiveBayes/                                # NaiveBayes &amp; AbstractNaiveBayes
+â”‚   â””â”€â”€ SVM/                                       # Support Vector Machines (Linear, Poly, RBF)
+â”œâ”€â”€ Datasets/                                       # 20+ bundled datasets (Iris, Social_Network_Ads, etc.)
+â”œâ”€â”€ pom.xml                                        # Maven configuration
+â””â”€â”€ README.md</code></pre>
+
+                        <h2>Algorithms &amp; Model Reference</h2>
+                        <p>All classifiers (<code>KNN</code>, <code>NaiveBayes</code>, <code>SVM</code>) inherit from <code>Model.java</code>, sharing common <code>fit()</code>, <code>evaluate()</code>, <code>predictLabels()</code>, <code>predictProbabilities()</code>, <code>save()</code>, and <code>load()</code> interfaces.</p>
+                        
+                        <ul>
+                          <li><strong>1. K-Nearest Neighbors (KNN)</strong>
+                            <ul>
+                              <li><strong>Metrics Supported:</strong> Euclidean, Manhattan, Minkowski, Cosine</li>
+                              <li><strong>Features:</strong> Supports both dense (<code>double[][]</code>) and sparse (<code>List&lt;Map&lt;Integer, Double&gt;&gt;</code>) inputs, majority voting, and neighbor-distance inspection.</li>
+                            </ul>
+                          </li>
+                          <li><strong>2. Support Vector Machine (SVM)</strong>
+                            <ul>
+                              <li><strong>Kernels:</strong> Linear, Polynomial, and Radial Basis Function (RBF).</li>
+                              <li><strong>Training:</strong> Simplified dual coordinate-ascent optimization with hinge loss framing.</li>
+                            </ul>
+                          </li>
+                          <li><strong>3. Naive Bayes</strong>
+                            <ul>
+                              <li><strong>Variants:</strong> Gaussian (dense only), Multinomial (dense/sparse with Laplace smoothing), and Bernoulli.</li>
+                              <li><strong>Computation:</strong> Conducted in log-space to prevent numerical underflow.</li>
+                            </ul>
+                          </li>
+                          <li><strong>4. Linear Regression</strong>
+                            <ul>
+                              <li><strong>Solvers:</strong> Closed-form Normal Equation via Gauss-Jordan matrix inversion or Batch Gradient Descent.</li>
+                              <li><strong>Metrics:</strong> Evaluated via Mean Squared Error (MSE) and RÂ² score.</li>
+                            </ul>
+                          </li>
+                          <li><strong>5. Logistic Regression</strong>
+                            <ul>
+                              <li><strong>Modes:</strong> Binary (sigmoid), Multinomial (softmax / one-vs-all), and Ordinal (cumulative logit / proportional odds).</li>
+                            </ul>
+                          </li>
+                        </ul>
+
+                        <h2>Data Ingestion &amp; Preprocessing</h2>
+                        
+                        <h3>DatasetLoader Protocols</h3>
+                        <ul>
+                          <li><strong>CSV / TSV / TXT:</strong> Quote-aware (RFC 4180 style) with automatic delimiter detection across sampled lines.</li>
+                          <li><strong>JSON:</strong> Hand-parsed array of flat key-value objects.</li>
+                          <li><strong>SQLite:</strong> Connects via JDBC (<code>jdbc:sqlite:</code>) and auto-discovers the primary table schema.</li>
+                        </ul>
+
+                        <h3>Splitting Strategies (<code>DatasetSplit</code>)</h3>
+                        <p>Specified via <code>loader.split(percentage, strategy)</code>:</p>
+                        <ul>
+                          <li><strong>Stratified</strong> (<code>"stratified"</code> / <code>"s"</code>): Preserves proportional class distribution across splits.</li>
+                          <li><strong>Time-series</strong> (<code>"timeseries"</code> / <code>"t"</code>): Sequential split without shuffling.</li>
+                          <li><strong>Random</strong> (<code>"random"</code> / <code>"r"</code>): Random shuffle prior to splitting.</li>
+                        </ul>
+
+                        <h3>Text &amp; Scaling Utilities</h3>
+                        <ul>
+                          <li><code>StandardScaler</code>: Z-score feature normalization.</li>
+                          <li><strong>Text Processing:</strong> <code>BagOfWords</code>, <code>TFIDF</code>, cumulative <code>NgramGenerator</code>, <code>WordToVec</code>, and <code>DocToVec</code>.</li>
+                        </ul>
+
+                        <h2>Quick Start Example</h2>
+                        <pre><code>import models.ml.*;
+import models.ml.DatasetHandler.*;
+import models.ml.DatasetHandler.helpers.DatasetConfig;
+import models.ml.KNN.KNN;
+import java.util.Map;
+import java.util.Arrays;
+
+public class QuickStart {
+    public static void main(String[] args) throws Exception {
+        // 1. Ingest dataset with configuration
+        DatasetLoader dl = new DatasetLoader(
+            "Datasets/Iris.csv", 
+            DatasetConfig.HAS_ID_WITH_HEADER, 
+            "Species"
+        );
+
+        // 2. Instantiate model and fit using a 70/30 stratified split
+        KNN knn = new KNN();
+        knn.fit(dl, 70, "stratified");
+
+        // 3. Evaluate against metrics
+        Map&lt;String, Double&gt; metrics = knn.evaluate(new String[] { "accuracy", "precision", "recall" });
+        System.out.println("Model Metrics: " + metrics);
+
+        // 4. Generate predictions
+        int[] predictions = knn.predictLabels();
+        System.out.println("First 5 test predictions: " + Arrays.toString(Arrays.copyOfRange(predictions, 0, 5)));
+    }
+}</code></pre>
+
+                        <h2>Model Persistence</h2>
+                        <p>Models extending <code>Model</code> (<code>KNN</code>, <code>NaiveBayes</code>, <code>SVM</code>) support native JDK binary serialization:</p>
+                        <pre><code>// Save trained model to disk
+knn.save("saved_knn_model.bin");
+
+// Restore model from disk
+KNN restoredKnn = new KNN();
+restoredKnn.load("saved_knn_model.bin");</code></pre>
+
+                        <h2>Evaluation Metrics Reference</h2>
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>Category</th>
+                              <th>Available Metrics</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td><strong>Classification</strong></td>
+                              <td>Accuracy, Precision, Recall, Specificity, Fâ‚ Score, Balanced Accuracy, MCC</td>
+                            </tr>
+                            <tr>
+                              <td><strong>Regression</strong></td>
+                              <td>Mean Squared Error (MSE), Root Mean Squared Error (RMSE), RÂ² Score</td>
+                            </tr>
+                          </tbody>
+                        </table>
+
+                        <h2>Build &amp; Requirements</h2>
+                        <ul>
+                          <li><strong>JDK:</strong> Java 11 or higher</li>
+                          <li><strong>Build Tool:</strong> Apache Maven</li>
+                        </ul>
+                        <pre><code># Build project
+mvn clean compile
+
+# Run main entry point
+mvn exec:java -Dexec.mainClass="models.ml.App"
+
+# Execute test suite
+mvn test</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Info Panel Sidebar -->
+            <aside class="project-sidebar">
+                <div class="sidebar-section">
+                    <h3>Project information</h3>
+                    <p>ðŸŒ satellite_pipeline_handler,<br>satellite_pipeline_handler.html</p>
+                    <p style="margin-top: 8px;">âž• Addior <span style="background: #eee; padding: 2px 4px; border-radius: 3px;">Usarve</span></p>
+                </div>
+
+                <div class="sidebar-section">
+                    <p>â­ 8 swarted</p>
+                    <p style="margin-top: 4px;">ðŸ“„ README.md (formatted preview)</p>
+                    <p style="margin-top: 4px;">ðŸ”€ Commit activity</p>
+                    <p style="margin-top: 4px;">ðŸ“¦ Releases</p>
+                    <p style="margin-top: 4px;">ðŸ“¦ Packages & Registries</p>
+                    <p style="margin-top: 4px;">ðŸ‘¥ Members</p>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Languages</h3>
+                    <div class="lang-legend">
+                        <div class="lang-item"><span class="dot" style="background:#1068bf;"></span> Python 17.2%</div>
+                        <div class="lang-item"><span class="dot" style="background:#1f78b4;"></span> C 5.7%</div>
+                        <div class="lang-item"><span class="dot" style="background:#e31a1c;"></span> C++ 186.3%</div>
+                        <div class="lang-item"><span class="dot" style="background:#33a02c;"></span> Java 1.2%</div>
+                        <div class="lang-item"><span class="dot" style="background:#ff7f00;"></span> Emacs 1.2%</div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="donut-chart"></div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+</body>
+</html>
